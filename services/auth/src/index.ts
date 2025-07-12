@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
+import authRoutes from "./api/index";
 dotenv.config();
 
 const app = express();
@@ -11,6 +12,7 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cors());
+app.use("/api/auth", authRoutes);
 
 app.get("/", (_, res) => {
   res.status(200).json({ message: "Authentication api is live 🔴" });
@@ -23,14 +25,12 @@ const server = app.listen(port, () =>
 process.on("SIGINT", () => {
   server.close((err) => {
     if (err) console.log("server closing err: ", err);
-    process.exit(0);
   });
 });
 
 process.on("SIGTERM", () => {
   server.close((err) => {
     if (err) console.log("server closing err: ", err);
-    process.exit(0);
   });
 });
 // 985045

@@ -17,16 +17,20 @@ model User {
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
   sessions     Session[]
+
+  @@map("users")
 }
 
 model Session {
   id            String   @id @default(uuid())
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String
-  refresh_token String
+  userId        String   @unique
+  refresh_token String   @unique
   user_agent    String?
   ip_address    String?
   is_valid      Boolean  @default(true)
   created_at    DateTime @default(now())
   expires_at    DateTime
+
+  @@map("sessions")
 }
