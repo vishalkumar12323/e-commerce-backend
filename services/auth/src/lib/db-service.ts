@@ -43,7 +43,10 @@ class AuthDatabase {
 
   async findUserByEmail(email: string) {
     try {
-      const user = await this.prisma.user.findUnique({ where: { email } });
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+        select: { id: true, email: true, password: true },
+      });
 
       if (!user) throw new Error("USER_NOT_FOUND");
 
@@ -65,6 +68,7 @@ class AuthDatabase {
           email: true,
           id: true,
           name: true,
+          phone_number: true,
         },
       });
     } catch (error) {
@@ -73,6 +77,20 @@ class AuthDatabase {
     }
   }
 
+  async findUserByRefreshToken(refreshToken: string) {
+    return await this.prisma.session.findUnique({
+      where: { refresh_token: refreshToken },
+      select: {
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
   async createUserSession(userId: string, refreshToken: string) {
     try {
       const existingSession = await this.prisma.session.findFirst({
