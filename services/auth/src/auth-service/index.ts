@@ -1,10 +1,10 @@
-import AuthDatabase from "../lib/db-service";
+import AuthDatabase from "../lib/db-service.js";
 import {
   createAccessToken,
   createRefreshToken,
   verifyAccessToken,
-} from "../utils/token-service";
-import { comparePass } from "../utils/password-service";
+} from "../utils/token-service.js";
+import { comparePass } from "../utils/password-service.js";
 
 type TUserProps = {
   name: string;

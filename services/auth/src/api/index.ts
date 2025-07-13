@@ -1,6 +1,6 @@
 import express from "express";
-import AuthService from "../auth-service/index";
-import { isAuthenticated } from "./middlewares/middleware";
+import AuthService from "../auth-service/index.js";
+import { isAuthenticated } from "./middleware.js";
 
 const router = express.Router();
 const authService = new AuthService();
@@ -21,6 +21,6 @@ router.route("/signin").post(async (req, res) => {});
 
 router.route("/refresh-session").post(async (req, res) => {});
 
-router.route("/logou").delete(async (req, res) => {});
+router.route("/logout").delete(async (req, res) => {});
 
 export default router;

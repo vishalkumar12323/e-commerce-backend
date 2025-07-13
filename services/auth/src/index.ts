@@ -2,8 +2,9 @@ import dotenv from "dotenv";
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
-import authRoutes from "./api/index";
-dotenv.config();
+import authRoutes from "./api/index.js";
+
+dotenv.config({ quiet: true });
 
 const app = express();
 const port = process.env.PORT || 3001;

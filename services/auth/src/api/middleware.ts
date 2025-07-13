@@ -1,12 +1,16 @@
+import { verifyAccessToken } from "../utils/token-service.js";
 import { Request, Response, NextFunction } from "express";
-import { verifyAccessToken } from "../../utils/token-service";
 
-interface IRequest extends Request {
-  user?: any;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
 }
 
 export const isAuthenticated = (
-  req: IRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
