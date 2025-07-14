@@ -1,12 +1,8 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import { TTokenPayload } from "../types/index.js";
 
 dotenv.config({ quiet: true });
-
-type TTokenPayload = {
-  id: string;
-  email: string;
-};
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET as string;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET as string;

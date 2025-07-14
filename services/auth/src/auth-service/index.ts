@@ -5,39 +5,44 @@ import {
   verifyAccessToken,
 } from "../utils/token-service.js";
 import { comparePass } from "../utils/password-service.js";
+import {
+  TUserCredentials,
+  TUserProps,
+  TUserSessionProps,
+} from "../types/index.js";
 
-type TUserProps = {
-  name: string;
-  email: string;
-  password: string;
-  phone_number: string;
-};
-
-type TUserCredentials = Omit<TUserProps, "name" | "phone_number">;
 class AuthService {
   private db: AuthDatabase;
   constructor() {
     this.db = new AuthDatabase();
   }
 
-  async signup(userData: TUserProps) {
+  async signup(
+    userData: TUserProps,
+    { ip_address, user_agent }: { ip_address: string; user_agent: string }
+  ) {
     try {
       const user = await this.db.createUser(userData);
       const accessToken = createAccessToken(user);
       const refreshToken = createRefreshToken(user);
 
-      await this.db.createUserSession(user.id, refreshToken);
+      await this.db.createUserSession(user.id, {
+        refreshToken,
+        ip_address,
+        user_agent,
+      });
       return { accessToken, refreshToken, user };
     } catch (error) {
-      console.error("Error during signup:", error);
-      if (error instanceof Error && error.message === "USER_EXISTS") {
-        throw error;
-      }
-      throw new Error("Error during signup");
+      throw new Error(
+        error instanceof Error ? error.message : "Internal server error"
+      );
     }
   }
 
-  async signin(credentials: TUserCredentials) {
+  async signin(
+    credentials: TUserCredentials,
+    { ip_address, user_agent }: { ip_address: string; user_agent: string }
+  ) {
     const { email, password } = credentials;
 
     try {
@@ -45,10 +50,9 @@ class AuthService {
       try {
         user = await this.db.findUserByEmail(email);
       } catch (error) {
-        if (error instanceof Error && error.message === "USER_NOT_FOUND") {
-          throw new Error("INVALID_CREDENTIALS");
-        }
-        throw error;
+        throw new Error(
+          error instanceof Error ? error.message : "Internal server error."
+        );
       }
 
       if (!(await comparePass(password, user.password))) {
@@ -61,13 +65,22 @@ class AuthService {
         email: user.email,
       });
 
-      await this.db.updateUserSession(user.id, refreshToken);
+      await this.db.updateUserSession(user.id, {
+        refreshToken,
+        ip_address,
+        user_agent,
+      });
       return {
         accessToken,
         refreshToken,
         user: { id: user.id, email: user.email },
       };
-    } catch (error) {}
+    } catch (error) {
+      console.log("err: ", error);
+      throw new Error(
+        error instanceof Error ? error.message : "Internal server error."
+      );
+    }
   }
 
   async getUserProfile(userId: string) {
@@ -85,12 +98,18 @@ class AuthService {
     const accessToken = createAccessToken(user);
     const newRefreshToken = createRefreshToken(user);
 
-    await this.db.updateUserSession(userId, newRefreshToken);
+    await this.db.updateUserSession(userId, { refreshToken: newRefreshToken });
 
     return { accessToken, refreshToken: newRefreshToken, user };
   }
 
-  async createSession() {}
+  async createSession(userId: string, sessionPayload: TUserSessionProps) {
+    try {
+      await this.db.createUserSession(userId, sessionPayload);
+    } catch (error) {
+      console.log("err ❌ ", error);
+    }
+  }
 
   async logout(userId: string) {
     return await this.db.logout(userId);

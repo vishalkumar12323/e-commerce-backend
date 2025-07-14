@@ -1,12 +1,8 @@
 import { prisma } from "./db-client.js";
 import { PrismaClient } from "@prisma/client";
+import { TUserProps, TUserSessionProps } from "../types/index.js";
+import { hashPass } from "../utils/password-service.js";
 
-type TUserProps = {
-  name: string;
-  email: string;
-  password: string;
-  phone_number: string;
-};
 class AuthDatabase {
   private prisma: PrismaClient;
   constructor() {
@@ -26,18 +22,17 @@ class AuthDatabase {
         throw new Error("USER_EXISTS");
       }
 
+      const hashedPassword = await hashPass(password);
       const user = await this.prisma.user.create({
-        data: { name, email, password, phone_number },
+        data: { name, email, password: hashedPassword, phone_number },
         select: { id: true, email: true },
       });
 
       return user;
     } catch (error) {
-      console.error("Error creating user:", error);
-      if (error instanceof Error && error.message === "USER_EXISTS") {
-        throw error;
-      }
-      throw new Error("Error creating user");
+      throw new Error(
+        error instanceof Error ? error.message : "Internal server error."
+      );
     }
   }
 
@@ -48,15 +43,12 @@ class AuthDatabase {
         select: { id: true, email: true, password: true },
       });
 
-      if (!user) throw new Error("USER_NOT_FOUND");
-
+      if (!user) throw new Error("INVALID_CREDENTIALS");
       return user;
     } catch (error) {
-      console.error("Error finding user by email:", error);
-      if (error instanceof Error && error.message === "USER_NOT_FOUND") {
-        throw error;
-      }
-      throw new Error("Error finding user by email");
+      throw new Error(
+        error instanceof Error ? error.message : "Internal server error."
+      );
     }
   }
 
@@ -91,7 +83,8 @@ class AuthDatabase {
       },
     });
   }
-  async createUserSession(userId: string, refreshToken: string) {
+  async createUserSession(userId: string, sessionPayload: TUserSessionProps) {
+    const { refreshToken, ip_address, user_agent } = sessionPayload;
     try {
       const existingSession = await this.prisma.session.findFirst({
         where: {
@@ -99,46 +92,35 @@ class AuthDatabase {
         },
       });
 
-      if (existingSession) {
-        return await this.prisma.session.update({
-          where: { id: existingSession.id },
-          data: {
-            userId,
-            refresh_token: refreshToken,
-            expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5),
-          },
-        });
-      }
-
-      return await this.prisma.session.create({
+      if (existingSession) await this.updateUserSession(userId, sessionPayload);
+      await this.prisma.session.create({
         data: {
-          id: userId,
+          userId,
           refresh_token: refreshToken,
+          ip_address,
+          user_agent,
           expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5),
-          user: {
-            connect: {
-              id: userId,
-            },
-          },
         },
       });
     } catch (error) {}
   }
 
-  async updateUserSession(userId: string, refreshToken: string) {
+  async updateUserSession(userId: string, sessionPayload: TUserSessionProps) {
     try {
       const existingSession = await this.prisma.session.findUnique({
         where: { userId },
       });
 
       if (!existingSession) {
-        return await this.createUserSession(userId, refreshToken);
+        return await this.createUserSession(userId, sessionPayload);
       }
-
+      const { refreshToken, ip_address, user_agent } = sessionPayload;
       await this.prisma.session.update({
         where: { userId },
         data: {
           refresh_token: refreshToken,
+          ip_address,
+          user_agent,
           expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5),
         },
       });

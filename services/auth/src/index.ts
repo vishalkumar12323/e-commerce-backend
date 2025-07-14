@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
+import morgan from "morgan";
 import authRoutes from "./api/index.js";
 
 dotenv.config({ quiet: true });
@@ -12,6 +13,7 @@ const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(morgan("dev"));
 app.use(cors());
 app.use("/api/auth", authRoutes);
 
@@ -34,4 +36,3 @@ process.on("SIGTERM", () => {
     if (err) console.log("server closing err: ", err);
   });
 });
-// 985045
