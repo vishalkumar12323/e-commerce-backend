@@ -2,16 +2,10 @@ import AuthDatabase from "../lib/db-service.js";
 import {
   createAccessToken,
   createRefreshToken,
-  verifyAccessToken,
   verifyRefreshToken,
 } from "../utils/token-service.js";
 import { comparePass } from "../utils/password-service.js";
-import {
-  TTokenPayload,
-  TUserCredentials,
-  TUserProps,
-  TUserSessionProps,
-} from "../types/index.js";
+import { TTokenPayload, TUserCredentials, TUserProps } from "../types/index.js";
 
 class AuthService {
   private db: AuthDatabase;
@@ -89,28 +83,23 @@ class AuthService {
     return await this.db.findUserById(userId);
   }
 
-  async refreshSession(refreshToken: string) {
+  async refreshSession(user: TTokenPayload, refreshToken: string) {
     try {
-      const palyload = verifyRefreshToken(refreshToken) as TTokenPayload;
-      const session = this.db.findSessionByRefreshToken(
+      const session = await this.db.findSessionByRefreshToken(
         refreshToken,
-        palyload.id
+        user.id
       );
       if (!session) throw new Error("INVALID_SESSION");
-      const newAccessToken = createAccessToken(palyload);
+      const newAccessToken = createAccessToken({
+        id: user.id,
+        email: user.email,
+      });
       return newAccessToken;
     } catch (error) {
+      console.log("err:? ", error);
       throw new Error(
         error instanceof Error ? error.message : "Internal server error."
       );
-    }
-  }
-
-  async createSession(userId: string, sessionPayload: TUserSessionProps) {
-    try {
-      await this.db.createUserSession(userId, sessionPayload);
-    } catch (error) {
-      console.log("err ❌ ", error);
     }
   }
 

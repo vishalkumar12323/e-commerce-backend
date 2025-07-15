@@ -1,16 +1,16 @@
 import express from "express";
 import useragnet from "useragent";
 import AuthService from "../auth-service/index.js";
-import { isAuthenticated } from "./middleware.js";
+import { isAuthenticated, isRefreshTokenValid } from "./middleware.js";
 import { TUserProps, TUserCredentials, TTokenPayload } from "../types/index.js";
-import { verifyRefreshToken } from "../utils/token-service.js";
 
 const router = express.Router();
 const authService = new AuthService();
 
 router.route("/profile").get(isAuthenticated, async (req, res) => {
   try {
-    const user = await authService.getUserProfile(req.user.id);
+    const user = await authService.getUserProfile(req.user?.id as string);
+    if (!user) return res.status(404).json({ message: "user not found" });
     return res.status(200).json(user);
   } catch (error) {
     console.error("Error getting user profile:", error);
@@ -69,16 +69,17 @@ router.route("/signin").post(async (req, res) => {
   }
 });
 
-router.route("/refresh-session").post(async (req, res) => {
-  const refreshToken = req.headers["refresh-token"];
+router.route("/refresh-session").post(isRefreshTokenValid, async (req, res) => {
+  const { refreshToken } = req;
 
-  if (!refreshToken || typeof refreshToken !== "string") {
-    return res.status(401).json({ message: "Refresh token is required" });
-  }
   try {
-    const newAccessToken = await authService.refreshSession(refreshToken);
+    const newAccessToken = await authService.refreshSession(
+      req.user as TTokenPayload,
+      refreshToken as string
+    );
     res.status(200).json({ accessToken: newAccessToken });
   } catch (error) {
+    console.log("errrr ", error);
     if (error instanceof Error && error.message === "INVALID_SESSION") {
       return res
         .status(401)
