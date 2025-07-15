@@ -2,7 +2,8 @@ import express from "express";
 import useragnet from "useragent";
 import AuthService from "../auth-service/index.js";
 import { isAuthenticated } from "./middleware.js";
-import { TUserProps, TUserCredentials } from "../types/index.js";
+import { TUserProps, TUserCredentials, TTokenPayload } from "../types/index.js";
+import { verifyRefreshToken } from "../utils/token-service.js";
 
 const router = express.Router();
 const authService = new AuthService();
@@ -68,8 +69,39 @@ router.route("/signin").post(async (req, res) => {
   }
 });
 
-router.route("/refresh-session").post(async (req, res) => {});
+router.route("/refresh-session").post(async (req, res) => {
+  const refreshToken = req.headers["refresh-token"];
 
-router.route("/logout").delete(async (req, res) => {});
+  if (!refreshToken || typeof refreshToken !== "string") {
+    return res.status(401).json({ message: "Refresh token is required" });
+  }
+  try {
+    const newAccessToken = await authService.refreshSession(refreshToken);
+    res.status(200).json({ accessToken: newAccessToken });
+  } catch (error) {
+    if (error instanceof Error && error.message === "INVALID_SESSION") {
+      return res
+        .status(401)
+        .json({ message: "invalid session or session expired" });
+    }
+    return res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+router.route("/logout").delete(async (req, res) => {
+  const refreshToken = req.headers["refresh-token"];
+  if (!refreshToken || typeof refreshToken !== "string")
+    return res.status(401).json({ message: "Refresh token is required." });
+
+  try {
+    await authService.logout(refreshToken);
+    res.status(200).json({ message: "Logged out from current session" });
+  } catch (error) {
+    if (error instanceof Error && error.message) {
+      return res.status(401).json({ message: error.message });
+    }
+    return res.status(500).json({ message: "Internal server error." });
+  }
+});
 
 export default router;

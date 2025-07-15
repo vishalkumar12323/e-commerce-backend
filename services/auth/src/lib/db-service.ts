@@ -69,9 +69,9 @@ class AuthDatabase {
     }
   }
 
-  async findUserByRefreshToken(refreshToken: string) {
-    return await this.prisma.session.findUnique({
-      where: { refresh_token: refreshToken },
+  async findSessionByRefreshToken(refreshToken: string, userId: string) {
+    return await this.prisma.session.findFirst({
+      where: { refresh_token: refreshToken, userId, is_valid: true },
       select: {
         userId: true,
         user: {
@@ -86,13 +86,6 @@ class AuthDatabase {
   async createUserSession(userId: string, sessionPayload: TUserSessionProps) {
     const { refreshToken, ip_address, user_agent } = sessionPayload;
     try {
-      const existingSession = await this.prisma.session.findFirst({
-        where: {
-          OR: [{ refresh_token: refreshToken }, { userId }],
-        },
-      });
-
-      if (existingSession) await this.updateUserSession(userId, sessionPayload);
       await this.prisma.session.create({
         data: {
           userId,
@@ -102,42 +95,20 @@ class AuthDatabase {
           expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5),
         },
       });
-    } catch (error) {}
-  }
-
-  async updateUserSession(userId: string, sessionPayload: TUserSessionProps) {
-    try {
-      const existingSession = await this.prisma.session.findUnique({
-        where: { userId },
-      });
-
-      if (!existingSession) {
-        return await this.createUserSession(userId, sessionPayload);
-      }
-      const { refreshToken, ip_address, user_agent } = sessionPayload;
-      await this.prisma.session.update({
-        where: { userId },
-        data: {
-          refresh_token: refreshToken,
-          ip_address,
-          user_agent,
-          expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5),
-        },
-      });
     } catch (error) {
-      console.error("Error updating user session:", error);
-      throw new Error("Error updating user session");
+      console.log("errr: ", error);
     }
   }
-
-  async logout(userId: string) {
+  async logout(userId: string, refreshToken: string) {
     try {
-      await this.prisma.session.delete({
-        where: { userId },
+      await this.prisma.session.update({
+        where: { userId, refresh_token: refreshToken, is_valid: true },
+        data: { is_valid: false },
       });
     } catch (error) {
-      console.error("Error logging out user:", error);
-      throw new Error("Error logging out user");
+      throw new Error(
+        error instanceof Error ? error.message : "Internal server error."
+      );
     }
   }
 }

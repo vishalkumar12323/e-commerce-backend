@@ -3,9 +3,11 @@ import {
   createAccessToken,
   createRefreshToken,
   verifyAccessToken,
+  verifyRefreshToken,
 } from "../utils/token-service.js";
 import { comparePass } from "../utils/password-service.js";
 import {
+  TTokenPayload,
   TUserCredentials,
   TUserProps,
   TUserSessionProps,
@@ -65,7 +67,7 @@ class AuthService {
         email: user.email,
       });
 
-      await this.db.updateUserSession(user.id, {
+      await this.db.createUserSession(user.id, {
         refreshToken,
         ip_address,
         user_agent,
@@ -88,19 +90,20 @@ class AuthService {
   }
 
   async refreshSession(refreshToken: string) {
-    const userSession = await this.db.findUserByRefreshToken(refreshToken);
-
-    if (!userSession) {
-      throw new Error("INVALID_REFRESH_TOKEN");
+    try {
+      const palyload = verifyRefreshToken(refreshToken) as TTokenPayload;
+      const session = this.db.findSessionByRefreshToken(
+        refreshToken,
+        palyload.id
+      );
+      if (!session) throw new Error("INVALID_SESSION");
+      const newAccessToken = createAccessToken(palyload);
+      return newAccessToken;
+    } catch (error) {
+      throw new Error(
+        error instanceof Error ? error.message : "Internal server error."
+      );
     }
-
-    const { user, userId } = userSession;
-    const accessToken = createAccessToken(user);
-    const newRefreshToken = createRefreshToken(user);
-
-    await this.db.updateUserSession(userId, { refreshToken: newRefreshToken });
-
-    return { accessToken, refreshToken: newRefreshToken, user };
   }
 
   async createSession(userId: string, sessionPayload: TUserSessionProps) {
@@ -111,8 +114,15 @@ class AuthService {
     }
   }
 
-  async logout(userId: string) {
-    return await this.db.logout(userId);
+  async logout(refreshToken: string) {
+    try {
+      const palyload = verifyRefreshToken(refreshToken) as TTokenPayload;
+      await this.db.logout(palyload.id, refreshToken);
+    } catch (error) {
+      throw new Error(
+        error instanceof Error ? error.message : "Internal server error."
+      );
+    }
   }
 }
 
