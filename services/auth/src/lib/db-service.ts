@@ -2,6 +2,7 @@ import { prisma } from "./db-client.js";
 import { PrismaClient } from "@prisma/client";
 import { TUserProps, TUserSessionProps } from "../types/index.js";
 import { hashPass } from "../utils/password-service.js";
+import { getSessionExpiryMs } from "../utils/token-service.js";
 
 class AuthDatabase {
   private prisma: PrismaClient;
@@ -72,7 +73,7 @@ class AuthDatabase {
         refresh_token: refreshToken,
         ip_address,
         user_agent,
-        expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5),
+        expires_at: new Date(Date.now() + getSessionExpiryMs()),
       },
     });
   }
