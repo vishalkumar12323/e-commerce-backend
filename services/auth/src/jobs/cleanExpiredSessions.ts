@@ -7,10 +7,16 @@ async function cleanExpiredSessions() {
   try {
     const result = await prisma.session.deleteMany({
       where: {
-        is_valid: true,
-        expires_at: {
-          lt: new Date(),
-        },
+        OR: [
+          {
+            expires_at: {
+              lt: new Date(),
+            },
+          },
+          {
+            is_valid: true,
+          },
+        ],
       },
     });
 
