@@ -1,9 +1,11 @@
 {
-  "name": "product",
+  "name": "product-api",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node src/index"
+    "start": "node src/index",
+    "dev": "nodemon",
+    "build": "tsc"
   },
   "author": "Vishal Kumar",
   "license": "MIT"
