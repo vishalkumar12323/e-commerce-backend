@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import morgan from "morgan";
 import { globalErrorHandler } from "./middlewares/error.middleware.js";
+import productRoutes from "./routes/product.routes.js";
 
 const app = express();
 
@@ -12,15 +13,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 app.use(morgan("dev"));
 
+app.use("/api/products", productRoutes);
 app.use(globalErrorHandler);
 
 app.get(
   "/",
-  (req, res, next) => {
+  (req, _res, next) => {
     console.log(`middleware running [INCOMING REQUEST IP] : [IP: ${req.ip}]`);
     next();
   },
-  (req, res) => {
+  (_req, res) => {
     res.status(200).json({ message: "API running is live 🔴" });
   }
 );
