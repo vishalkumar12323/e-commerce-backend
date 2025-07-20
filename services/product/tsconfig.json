@@ -13,7 +13,7 @@
   },
   "include": [
     "./src/**/*.ts"
-  ],
+, "src/seed.js"  ],
   "exclude": [
     "./node_modules"
   ]
