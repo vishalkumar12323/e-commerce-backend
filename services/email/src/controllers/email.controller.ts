@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { sendEmail } from "../services/email.service.js";
+import { sendEmail, } from "../services/email.service.js";
 
 export const sendMail = async (req: Request, res: Response) => {
   const { to, subject, html } = req.body;

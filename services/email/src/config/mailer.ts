@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 
-dotenv.config({quiet: true});
+dotenv.config({ quiet: true });
 
 export const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -9,8 +9,8 @@ export const transporter = nodemailer.createTransport({
   secure: false,
   auth: {
     user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
+    pass: process.env.SMTP_PASS,
+  },
 });
 
-export const FROM = ``
+export const FROM = `"${process.env.FROM_NAME}" <${process.env.FROM_EMAIL}>`;
