@@ -2,7 +2,7 @@
   "name": "email",
   "version": "1.0.0",
   "main": "dist/index.js",
-  "type": "module", 
+  "type": "module",
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon",
@@ -11,6 +11,8 @@
   "author": "Vishal Kumar",
   "license": "MIT",
   "devDependencies": {
+    "@types/amqplib": "^0.10.7",
+    "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.3",
     "@types/node": "^24.0.15",
     "@types/nodemailer": "^6.4.17",
@@ -20,7 +22,9 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "amqplib": "^0.10.8",
     "dotenv": "^17.2.0",
+    "ejs": "^3.1.10",
     "express": "^5.1.0",
     "nodemailer": "^7.0.5"
   }

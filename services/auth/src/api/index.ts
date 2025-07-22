@@ -1,12 +1,17 @@
+import dotenv from "dotenv";
 import express from "express";
 import useragnet from "useragent";
 import AuthService from "../auth-service/index.js";
 import { isAuthenticated, isRefreshTokenValid } from "./middleware.js";
 import { TUserProps, TUserCredentials, TTokenPayload } from "../types/index.js";
+import {publishToQueue} from "../queue-service/rabbitmq.js"
+
+dotenv.config({quiet: true});
 
 const router = express.Router();
 const authService = new AuthService();
 
+const queue = process.env.EMAIL_QUEUE || "SEND_MAIL_QUEUE";
 router.route("/profile").get(isAuthenticated, async (req, res) => {
   try {
     const user = await authService.getUserProfile(req.user?.id as string);
@@ -35,7 +40,10 @@ router.route("/signup").post(async (req, res) => {
       },
       { ip_address, user_agent }
     );
-
+    await publishToQueue(queue, {
+      name,
+      email,
+    });
     res.status(200).json({ accessToken, refreshToken, user });
   } catch (error) {
     if (error instanceof Error && error.message === "USER_EXISTS") {
