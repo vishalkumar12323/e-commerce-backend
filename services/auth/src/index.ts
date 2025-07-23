@@ -27,12 +27,20 @@ const server = app.listen(port, () =>
 
 process.on("SIGINT", () => {
   server.close((err) => {
-    if (err) console.log("server closing err: ", err);
+    if (err) {
+      console.log("server closing err: ", err);
+      process.exit(1);
+    }
+    process.exit(0);
   });
 });
 
 process.on("SIGTERM", () => {
   server.close((err) => {
-    if (err) console.log("server closing err: ", err);
+    if (err) {
+      console.log("server closing err: ", err);
+      process.exit(1);
+    }
+    process.exit(0);
   });
 });
