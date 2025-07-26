@@ -16,15 +16,8 @@ app.use(morgan("dev"));
 app.use("/api/products", productRoutes);
 app.use(globalErrorHandler);
 
-app.get(
-  "/",
-  (req, _res, next) => {
-    console.log(`middleware running [INCOMING REQUEST IP] : [IP: ${req.ip}]`);
-    next();
-  },
-  (_req, res) => {
-    res.status(200).json({ message: "API running is live 🔴" });
-  }
-);
+app.get("/", (_req, res) => {
+  res.status(200).json({ message: "API running is live 🔴" });
+});
 
 export default app;
