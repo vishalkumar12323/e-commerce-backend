@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "nodemon",
+    "dev:watch": "nodemon",
     "build": "tsc",
     "clean:session": "node --loader ts-node/esm ./src/jobs/cleanExpiredSessions.ts"
   },

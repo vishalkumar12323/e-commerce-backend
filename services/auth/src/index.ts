@@ -41,6 +41,7 @@ process.on("SIGTERM", () => {
       console.log("server closing err: ", err);
       process.exit(1);
     }
+    console.log("auth-api closed successfully.");
     process.exit(0);
   });
 });

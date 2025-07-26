@@ -15,7 +15,7 @@ ENV NODE_ENV=development
 COPY . .
 RUN yarn build
 
-CMD [ "yarn", "dev" ]
+CMD [ "yarn", "dev:watch" ]
 
 
 # Stage 3: Production build
@@ -33,5 +33,7 @@ FROM node:18-alpine AS production
 WORKDIR /app
 COPY --from=build /app/dist ./dist
 COPY --from=base /app/node_modules ./node_modules
+COPY --from=base /app/prisma ./prisma
+
 COPY package*.json ./
 CMD [ "node", "dist/index.js" ]

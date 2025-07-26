@@ -13,7 +13,7 @@ ENV NODE_ENV=Development
 COPY . .
 RUN yarn build
 
-CMD [ "yarn", "build" ]
+CMD [ "yarn", "dev:watch" ]
 
 # Stage 3: Production setup
 FROM base AS build

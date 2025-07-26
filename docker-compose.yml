@@ -1,7 +1,7 @@
 services:
   auth-db:
+    container_name: auth-api-database
     image: postgres:15
-    restart: always
     environment:
       - POSTGRES_DB=ecommerce-auth-db
       - POSTGRES_USER=postgres
@@ -10,52 +10,80 @@ services:
       - "5432:5432"
     volumes:
       - auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   product-db:
+    container_name: product-api-database
     image: postgres:15
-    restart: always
     environment:
       - POSTGRES_DB=ecommerce-product-db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - "5433:5433"
+      - "5432:5432"
     volumes:
       - product-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
+    container_name: rabbitmq-service
     image: rabbitmq:3.13.7-management-alpine
     hostname: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
-    environment:
-      - NODE_ENV=development
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=password
+    env_file:
+      - ./services/email/.env
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
       - rabbitmq-log:/var/log/rabbitmq
     
   auth-service:
-    build: ./services/auth
+    container_name: auth-api
+    build: 
+      context: ./services/auth
+      target: development
     ports:
       - "3001:3001"
+    env_file:
+      - ./services/auth/.env
     environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/ecommerce-product-db
+      - DATABASE_URL=postgresql://postgres:postgres@auth-db:5432/ecommerce-auth-db?schema=public
     depends_on:
-      - auth-db
+      auth-db:
+        condition: service_healthy
+    volumes:
+      - ./services/auth/src:/app
+      - ./services/auth:/app
+      - /app/node_modules
 
   product-service:
-    build: ./services/product
+    container_name: product-api
+    build:
+      context: ./services/product
+      target: development
     ports:
       - "3002:3002"
+    env_file:
+      - ./services/product/.env
     environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/ecommerce-product-db
+      - DATABASE_URL=postgresql://postgres:postgres@product-db:5432/ecommerce-product-db?schema=public
     depends_on:
-      - product-db
+      product-db:
+        condition: service_healthy
+    volumes:
+      - ./services/auth/src:/app
+      - ./services/product:/app
+      - /app/node_modules
+    command: sh -c "npx prisma migrate reset --force && yarn dev:watch"
     
 
 volumes:
@@ -63,4 +91,3 @@ volumes:
   rabbitmq-log:
   auth-data:
   product-data:
-  
