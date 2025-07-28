@@ -17,7 +17,7 @@ app.use("/api/products", productRoutes);
 app.use(globalErrorHandler);
 
 app.get("/", (_req, res) => {
-  res.status(200).json({ message: "API running is live 🔴" });
+  res.status(200).json({ message: "Product API running is live 🔴" });
 });
 
 export default app;

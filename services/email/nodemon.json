@@ -1,6 +1,7 @@
 {
   "watch": ["src"],
-  "ignore": ["src/**/*.spec.ts"], 
-  "ext": "ts, js",
-  "exec": "node --loader ts-node/esm ./src/index.ts"
+  "ignore": ["src/**/*.spec.ts", "node_modules", "dist"],
+  "ext": "ts, js, json",
+  "exec": "node --loader ts-node/esm ./src/index.ts",
+  "legacyWatch": true
 }

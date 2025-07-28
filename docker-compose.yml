@@ -7,7 +7,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - "5432:5432"
+      - "8080:5432"
     volumes:
       - auth-data:/var/lib/postgresql/data
     healthcheck:
@@ -46,6 +46,19 @@ services:
       - rabbitmq-data:/var/lib/rabbitmq
       - rabbitmq-log:/var/log/rabbitmq
     
+  email-service:
+    container_name: email-service
+    build:
+      context: ./services/email
+      target: development
+    env_file:
+      - ./services/email/.env
+    volumes:
+      - ./services/email:/app
+      - /app/node_modules
+    command: yarn dev:watch
+    depends_on:
+      - rabbitmq
   auth-service:
     container_name: auth-api
     build: 
@@ -61,9 +74,9 @@ services:
       auth-db:
         condition: service_healthy
     volumes:
-      - ./services/auth/src:/app
       - ./services/auth:/app
       - /app/node_modules
+    command: sh -c "npx prisma migrate reset --force && yarn dev:watch"
 
   product-service:
     container_name: product-api
@@ -80,7 +93,6 @@ services:
       product-db:
         condition: service_healthy
     volumes:
-      - ./services/auth/src:/app
       - ./services/product:/app
       - /app/node_modules
     command: sh -c "npx prisma migrate reset --force && yarn dev:watch"

@@ -41,10 +41,12 @@ router.route("/signup").post(async (req, res) => {
       },
       { ip_address, user_agent }
     );
-    await publishToQueue(queue, {
+    const isEmailSent = await publishToQueue(queue, {
       name,
       email,
     });
+
+    console.log("isEmailSent: ", isEmailSent);
     res.status(200).json({ accessToken, refreshToken, user });
   } catch (error) {
     console.log("signup error: ", error);

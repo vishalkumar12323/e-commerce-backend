@@ -10,6 +10,7 @@ export const createProduct = async (req: Request, res: Response) => {
 
 export const getAllProducts = async (req: Request, res: Response) => {
   const products = await productService.getAllProducts();
+  console.log(products);
   res.status(200).json(products);
 };
 

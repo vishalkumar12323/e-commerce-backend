@@ -1,25 +1,32 @@
 import dotenv from "dotenv";
 import amqp from "amqplib";
 
-dotenv.config({quiet: true});
+dotenv.config({ quiet: true });
 
 let channel: amqp.Channel;
 let connection: amqp.ChannelModel;
 const queue = process.env.EMAIL_QUEUE || "SEND_MAIL_QUEUE";
+const username = process.env.RABBITMQ_USERNAME || "user";
+const password = process.env.RABBITMQ_PASSWORD || "password";
+const host = process.env.RABBITMQ_HOST || "rabbitmq";
+const port = process.env.RABBITMQ_PORT || "5672";
 
 export const connectRabbitMQ = async () => {
   try {
-     connection = await amqp.connect("amqp://localhost");
-     channel = await connection.createChannel();
-     await channel.assertQueue(queue);
+    console.log("env host: ", process.env.RABBITMQ_HOST);
+    const url = `amqp://${username}:${password}@${host}:${port}`;
 
-     connection.on("error", (err) => {
-      console.error('RabbitMQ connection error: ', err);
-     });
+    connection = await amqp.connect(url);
+    channel = await connection.createChannel();
+    await channel.assertQueue(queue);
 
-     connection.on('close', () => {
-      console.log('RabbitMQ connection closed');
-     })
+    connection.on("error", (err) => {
+      console.error("RabbitMQ connection error: ", err);
+    });
+
+    connection.on("close", () => {
+      console.log("RabbitMQ connection closed");
+    });
   } catch (error) {
     console.error("Failed to connect to RabbitMQ:", error);
     throw error;
@@ -28,10 +35,10 @@ export const connectRabbitMQ = async () => {
 
 export const closeRabbitMQ = async () => {
   try {
-    if(channel) {
+    if (channel) {
       await channel.close();
     }
-    if(connection) {
+    if (connection) {
       await connection.close();
     }
   } catch (error) {

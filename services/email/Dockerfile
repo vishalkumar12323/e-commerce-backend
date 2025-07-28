@@ -1,9 +1,9 @@
 # Stage 1: Base setup
-FROM node:18-alpine
+FROM node:18-alpine AS base
 WORKDIR /app
 
 COPY package*.json ./
-RUN yarn install
+RUN npm install -g yarn --force && yarn install
 
 
 # Stage 2: Development setup

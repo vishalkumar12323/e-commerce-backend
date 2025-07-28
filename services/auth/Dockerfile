@@ -36,4 +36,4 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 
 COPY package*.json ./
-CMD [ "node", "dist/index.js" ]
+CMD [ "yarn", "start" ]
