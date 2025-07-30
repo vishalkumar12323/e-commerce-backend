@@ -12,6 +12,17 @@ const router = express.Router();
 const authService = new AuthService();
 
 const queue = process.env.EMAIL_QUEUE || "SEND_MAIL_QUEUE";
+
+router.route("/users").get(async (req, res) => {
+  try {
+    const users = await authService.users();
+    res.status(200).json(users);
+  } catch (error) {
+    console.log("error getting users: ", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 router.route("/profile").get(isAuthenticated, async (req, res) => {
   try {
     const user = await authService.getUserProfile(req.user?.id as string);

@@ -79,7 +79,7 @@ services:
     volumes:
       - ./services/auth:/app
       - /app/node_modules
-    command: sh -c "npx prisma migrate reset --force && yarn dev:watch"
+    command: sh -c "npx prisma migrate deploy && yarn dev:watch"
 
   product-service:
     container_name: product-api
@@ -98,7 +98,7 @@ services:
     volumes:
       - ./services/product:/app
       - /app/node_modules
-    command: sh -c "npx prisma migrate reset --force && yarn dev:watch"
+    command: sh -c "npx prisma migrate deploy && yarn dev:watch"
     
 
 volumes:

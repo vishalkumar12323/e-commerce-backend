@@ -13,7 +13,10 @@ class AuthService {
     this.db = new AuthDatabase();
   }
 
-  async signup(
+  public async users() {
+    return await this.db.getUsers();
+  }
+  public async signup(
     userData: TUserProps,
     { ip_address, user_agent }: { ip_address: string; user_agent: string }
   ) {
@@ -35,7 +38,7 @@ class AuthService {
     }
   }
 
-  async signin(
+  public async signin(
     credentials: TUserCredentials,
     { ip_address, user_agent }: { ip_address: string; user_agent: string }
   ) {
@@ -79,11 +82,11 @@ class AuthService {
     }
   }
 
-  async getUserProfile(userId: string) {
+  public async getUserProfile(userId: string) {
     return await this.db.findUserById(userId);
   }
 
-  async refreshSession(user: TTokenPayload, refreshToken: string) {
+  public async refreshSession(user: TTokenPayload, refreshToken: string) {
     try {
       const session = await this.db.findSessionByRefreshToken(
         refreshToken,
@@ -103,7 +106,7 @@ class AuthService {
     }
   }
 
-  async logout(refreshToken: string) {
+  public async logout(refreshToken: string) {
     try {
       const palyload = verifyRefreshToken(refreshToken) as TTokenPayload;
       await this.db.logout(palyload.id, refreshToken);

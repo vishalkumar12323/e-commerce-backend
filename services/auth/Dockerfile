@@ -29,11 +29,16 @@ RUN yarn build
 
 # Stage 4: Production runner
 FROM node:18-alpine AS production
-
+ENV NODE_ENV=production
 WORKDIR /app
-COPY --from=build /app/dist ./dist
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/prisma ./prisma
 
 COPY package*.json ./
+COPY yarn.lock ./
+RUN yarn install --production
+RUN yarn add prisma --dev
+
+COPY --from=build /app/dist ./dist
+COPY --from=base /app/prisma ./prisma
+RUN npx prisma generate
+
 CMD [ "yarn", "start" ]

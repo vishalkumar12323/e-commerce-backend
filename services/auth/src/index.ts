@@ -11,10 +11,10 @@ dotenv.config({ quiet: true });
 const app = express();
 const port = process.env.PORT || 3001;
 
-connectRabbitMQ().catch((err) => {
-  console.log("Failed to initialize RabbitMQ:", err);
-  process.exit(1);
-});
+// connectRabbitMQ().catch((err) => {
+//   console.log("Failed to initialize RabbitMQ:", err);
+//   process.exit(1);
+// });
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));

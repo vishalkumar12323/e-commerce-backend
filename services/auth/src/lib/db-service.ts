@@ -10,7 +10,10 @@ class AuthDatabase {
     this.prisma = prisma;
   }
 
-  async createUser(
+  public async getUsers() {
+    return await this.prisma.user.findMany({ omit: { password: true } });
+  }
+  public async createUser(
     userData: TUserProps
   ): Promise<{ id: string; email: string }> {
     const { email, name, password, phone_number } = userData;
@@ -29,7 +32,7 @@ class AuthDatabase {
     });
   }
 
-  async findUserByEmail(email: string) {
+  public async findUserByEmail(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email },
       select: { id: true, email: true, password: true },
@@ -39,7 +42,7 @@ class AuthDatabase {
     return user;
   }
 
-  async findUserById(userid: string) {
+  public async findUserById(userid: string) {
     return await this.prisma.user.findUnique({
       where: { id: userid },
       select: {
@@ -51,7 +54,7 @@ class AuthDatabase {
     });
   }
 
-  async findSessionByRefreshToken(refreshToken: string, userId: string) {
+  public async findSessionByRefreshToken(refreshToken: string, userId: string) {
     return await this.prisma.session.findFirst({
       where: { refresh_token: refreshToken, userId, is_valid: true },
       select: {
@@ -65,7 +68,10 @@ class AuthDatabase {
       },
     });
   }
-  async createUserSession(userId: string, sessionPayload: TUserSessionProps) {
+  public async createUserSession(
+    userId: string,
+    sessionPayload: TUserSessionProps
+  ) {
     const { refreshToken, ip_address, user_agent } = sessionPayload;
     await this.prisma.session.create({
       data: {
@@ -77,7 +83,7 @@ class AuthDatabase {
       },
     });
   }
-  async logout(userId: string, refreshToken: string) {
+  public async logout(userId: string, refreshToken: string) {
     await this.prisma.session.update({
       where: { userId, refresh_token: refreshToken, is_valid: true },
       data: { is_valid: false },
