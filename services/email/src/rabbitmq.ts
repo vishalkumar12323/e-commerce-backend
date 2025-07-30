@@ -6,8 +6,8 @@ dotenv.config({ quiet: true });
 let channel: amqp.Channel;
 let connection: amqp.ChannelModel;
 const queue = process.env.EMAIL_QUEUE || "SEND_MAIL_QUEUE";
-const username = process.env.RABBITMQ_USERNAME || "user";
-const password = process.env.RABBITMQ_PASSWORD || "password";
+const username = process.env.RABBITMQ_USERNAME || "vishal";
+const password = process.env.RABBITMQ_PASSWORD || "login";
 const host = process.env.RABBITMQ_HOST || "rabbitmq";
 const port = process.env.RABBITMQ_PORT || "5672";
 

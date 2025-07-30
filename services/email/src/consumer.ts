@@ -1,17 +1,20 @@
-import { connectRabbitMQ, getChannel } from "./rabbitmq.js";
+import { getChannel } from "./rabbitmq.js";
 import { sendWelcomeEmail } from "./controller/sendWelcomeEmail.js";
 
 const queue = process.env.EMAIL_QUEUE || "SEND_MAIL_QUEUE";
 export const startConsumer = async () => {
-  await connectRabbitMQ();
-  const channel = getChannel();
+  try {
+    const channel = getChannel();
 
-  channel.consume(queue, async (message) => {
-    if (message) {
-      const data = JSON.parse(message.content.toString());
-      const { name, email } = data;
-      await sendWelcomeEmail({ name, email });
-      channel.ack(message);
-    }
-  });
+    channel.consume(queue, async (message) => {
+      if (message) {
+        const data = JSON.parse(message.content.toString());
+        const { name, email } = data;
+        await sendWelcomeEmail({ name, email });
+        channel.ack(message);
+      }
+    });
+  } catch (error) {
+    console.log("error consuming messages: ", error);
+  }
 };

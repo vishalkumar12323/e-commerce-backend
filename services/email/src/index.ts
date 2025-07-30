@@ -17,7 +17,7 @@ const startServer = async () => {
       }
     });
   } catch (error) {
-    console.error("Failed to rabbitmq service:", error);
+    console.error("::", error);
     process.exit(1);
   }
 };

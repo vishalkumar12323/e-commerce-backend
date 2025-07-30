@@ -58,7 +58,10 @@ services:
       - /app/node_modules
     command: yarn dev:watch
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+
+        
   auth-service:
     container_name: auth-api
     build: 
