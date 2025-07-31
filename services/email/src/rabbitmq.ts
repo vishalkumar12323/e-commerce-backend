@@ -5,7 +5,7 @@ dotenv.config({ quiet: true });
 
 let channel: amqp.Channel;
 let connection: amqp.ChannelModel;
-const queue = process.env.EMAIL_QUEUE || "SEND_MAIL_QUEUE";
+
 const username = process.env.RABBITMQ_USERNAME || "vishal";
 const password = process.env.RABBITMQ_PASSWORD || "login";
 const host = process.env.RABBITMQ_HOST || "rabbitmq";
@@ -13,12 +13,12 @@ const port = process.env.RABBITMQ_PORT || "5672";
 
 export const connectRabbitMQ = async () => {
   try {
-    console.log("env host: ", process.env.RABBITMQ_HOST);
     const url = `amqp://${username}:${password}@${host}:${port}`;
 
     connection = await amqp.connect(url);
     channel = await connection.createChannel();
-    await channel.assertQueue(queue);
+    await channel.assertQueue("WELCOME_MAIL_QUEUE");
+    await channel.assertQueue("RESET_PASSWORD_MAIL_QUEUE");
 
     connection.on("error", (err) => {
       console.error("RabbitMQ connection error: ", err);

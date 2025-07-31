@@ -1,12 +1,16 @@
 import { connectRabbitMQ, closeRabbitMQ } from "./rabbitmq.js";
-import { startConsumer } from "./consumer.js";
+import {
+  welcomeMailMsgConsumer,
+  resetPasswordServiceMsgConsumer,
+} from "./consumer.js";
 
 const startServer = async () => {
   try {
     await connectRabbitMQ();
     console.log("Successfully connected to RabbitMQ");
 
-    await startConsumer();
+    await welcomeMailMsgConsumer();
+    await resetPasswordServiceMsgConsumer();
 
     process.on("SIGTERM", async () => {
       try {
