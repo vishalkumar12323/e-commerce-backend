@@ -35,7 +35,7 @@ class AuthDatabase {
   public async findUserByEmail(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, password: true },
+      select: { id: true, name: true, email: true, password: true },
     });
 
     if (!user) throw new Error("INVALID_CREDENTIALS");
@@ -87,6 +87,23 @@ class AuthDatabase {
     await this.prisma.session.update({
       where: { userId, refresh_token: refreshToken, is_valid: true },
       data: { is_valid: false },
+    });
+  }
+
+  public async updatePassword(userId: string, password: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password },
+    });
+  }
+
+  public async resetPassword(userId: string, token: string, expiresAt: Date) {
+    return await this.prisma.passwordResetToken.create({
+      data: {
+        userId,
+        token,
+        expires_at: expiresAt,
+      },
     });
   }
 }

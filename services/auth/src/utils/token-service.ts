@@ -23,6 +23,11 @@ const createRefreshToken = (payload: TTokenPayload): string => {
   } as SignOptions);
 };
 
+const generateRandomToken = (payload: any, expiryTime: string): string => {
+  return jwt.sign(payload, ACCESS_TOKEN_SECRET, {
+    expiresIn: expiryTime,
+  } as SignOptions);
+};
 const verifyAccessToken = (token: string) => {
   return jwt.verify(token, ACCESS_TOKEN_SECRET);
 };
@@ -38,6 +43,7 @@ const getSessionExpiryMs = (): number => {
 export {
   createAccessToken,
   createRefreshToken,
+  generateRandomToken,
   verifyAccessToken,
   verifyRefreshToken,
   getSessionExpiryMs,

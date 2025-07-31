@@ -3,8 +3,9 @@ import {
   createAccessToken,
   createRefreshToken,
   verifyRefreshToken,
+  generateRandomToken,
 } from "../utils/token-service.js";
-import { comparePass } from "../utils/password-service.js";
+import { comparePass, hashPass } from "../utils/password-service.js";
 import { TTokenPayload, TUserCredentials, TUserProps } from "../types/index.js";
 
 class AuthService {
@@ -32,6 +33,7 @@ class AuthService {
       });
       return { accessToken, refreshToken, user };
     } catch (error) {
+      console.log("Method Signup: ", error);
       throw new Error(
         error instanceof Error ? error.message : "Internal server error"
       );
@@ -45,14 +47,9 @@ class AuthService {
     const { email, password } = credentials;
 
     try {
-      let user;
-      try {
-        user = await this.db.findUserByEmail(email);
-      } catch (error) {
-        throw new Error(
-          error instanceof Error ? error.message : "Internal server error."
-        );
-      }
+      const user = await this.db.findUserByEmail(email);
+
+      if (!user) throw new Error("USER_NOT_FOUND");
 
       if (!(await comparePass(password, user.password))) {
         throw new Error("INVALID_CREDENTIALS");
@@ -75,7 +72,7 @@ class AuthService {
         user: { id: user.id, email: user.email },
       };
     } catch (error) {
-      console.log("err: ", error);
+      console.log("Method Signin ", error);
       throw new Error(
         error instanceof Error ? error.message : "Internal server error."
       );
@@ -111,6 +108,49 @@ class AuthService {
       const palyload = verifyRefreshToken(refreshToken) as TTokenPayload;
       await this.db.logout(palyload.id, refreshToken);
     } catch (error) {
+      throw new Error(
+        error instanceof Error ? error.message : "Internal server error."
+      );
+    }
+  }
+
+  public async changePassword(
+    userEmail: string,
+    oldPassword: string,
+    newPassword: string
+  ) {
+    try {
+      const user = await this.db.findUserByEmail(userEmail);
+
+      if (!user) throw new Error("USER_NOT_FOUND");
+      if (!(await comparePass(oldPassword, user?.password as string))) {
+        throw new Error("INVALID_PASSWORD");
+      }
+
+      const newHashedPass = await hashPass(newPassword);
+      await this.db.updatePassword(user?.id as string, newHashedPass);
+    } catch (error) {
+      console.log("Method changePassword: ", error);
+      throw new Error(
+        error instanceof Error ? error.message : "Internal server error"
+      );
+    }
+  }
+
+  public async forgotPassword(email: string) {
+    try {
+      const user = await this.db.findUserByEmail(email);
+
+      if (!user) throw new Error("USER_NOT_FOUND");
+
+      const token = generateRandomToken({ id: user.id }, "10m");
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+      await this.db.resetPassword(user.id, token, expiresAt);
+
+      return { token, userEmail: user.email, name: user.name };
+    } catch (error) {
+      console.log("Method forgotPassword: ", error);
       throw new Error(
         error instanceof Error ? error.message : "Internal server error."
       );

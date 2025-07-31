@@ -11,8 +11,6 @@ dotenv.config({ quiet: true });
 const router = express.Router();
 const authService = new AuthService();
 
-const queue = process.env.EMAIL_QUEUE || "SEND_MAIL_QUEUE";
-
 router.route("/users").get(async (req, res) => {
   try {
     const users = await authService.users();
@@ -52,7 +50,7 @@ router.route("/signup").post(async (req, res) => {
       },
       { ip_address, user_agent }
     );
-    const isEmailSent = await publishToQueue(queue, {
+    const isEmailSent = await publishToQueue({
       name,
       email,
     });
@@ -127,6 +125,44 @@ router.route("/logout").delete(async (req, res) => {
       return res.status(401).json({ message: error.message });
     }
     return res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+router.route("/change-password").patch(isAuthenticated, async (req, res) => {
+  const {
+    oldPassword,
+    newPassword,
+  }: { oldPassword: string; newPassword: string } = req.body;
+  const userEmail = req.user?.email;
+
+  try {
+    await authService.changePassword(
+      userEmail as string,
+      oldPassword,
+      newPassword
+    );
+
+    res.status(200).json({ message: "password updated successfully." });
+  } catch (error) {
+    if (error instanceof Error && error.message) {
+      res.status(404).json(error.message);
+    }
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+router.route("/forgot-password").post(async (req, res) => {
+  const { email }: { email: string } = req.body;
+  try {
+    const { token, userEmail, name } = await authService.forgotPassword(email);
+
+    const isMailSent = await publishToQueue({ token, userEmail, name });
+    console.log("isMailSent: ", isMailSent);
+    res.status(200).json({ message: "Password reset email sent." });
+  } catch (error) {
+    if (error instanceof Error && error.message === "USER_NOT_FOUND") {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
