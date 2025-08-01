@@ -5,6 +5,7 @@ import AuthService from "../auth-service/index.js";
 import { isAuthenticated, isRefreshTokenValid } from "./middleware.js";
 import { TUserProps, TUserCredentials, TTokenPayload } from "../types/index.js";
 import { publishToQueue } from "../queue-service/rabbitmq.js";
+import { constantVariable } from "../queue-service/constant.js";
 
 dotenv.config({ quiet: true });
 
@@ -50,7 +51,7 @@ router.route("/signup").post(async (req, res) => {
       },
       { ip_address, user_agent }
     );
-    const isEmailSent = await publishToQueue({
+    const isEmailSent = await publishToQueue(constantVariable.WMQPattern, {
       name,
       email,
     });
@@ -155,7 +156,11 @@ router.route("/forgot-password").post(async (req, res) => {
   try {
     const { token, userEmail, name } = await authService.forgotPassword(email);
 
-    const isMailSent = await publishToQueue({ token, userEmail, name });
+    const isMailSent = await publishToQueue(constantVariable.RPMQPattern, {
+      token,
+      userEmail,
+      name,
+    });
     console.log("isMailSent: ", isMailSent);
     res.status(200).json({ message: "Password reset email sent." });
   } catch (error) {

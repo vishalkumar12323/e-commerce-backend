@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import amqp from "amqplib";
+import { constantVariable } from "./constant.js";
 
 dotenv.config({ quiet: true });
 
@@ -9,22 +10,14 @@ const password = process.env.RABBITMQ_PASSWORD || "password";
 const host = process.env.RABBITMQ_HOST || "localhost";
 const port = process.env.RABBITMQ_PORT || "5672";
 
-const exchage = "mail_exchange";
-const routingKey =
-  "b23077aa2ddd88c9ef402a2334bd3054cd13acf95ecc9c5f0cd03ad8a0bb";
-
-const queue = "SEND_MAIL_QUEUE";
-
 export const connectRabbitMQ = async () => {
   try {
     const url = `amqp://${username}:${password}@${host}:${port}`;
 
     const connection = await amqp.connect(url);
     channel = await connection.createChannel();
-    await channel.assertExchange(exchage, "direct");
-    await channel.assertQueue(queue);
+    await channel.assertExchange(constantVariable.exchangeName, "direct");
 
-    await channel.bindQueue(queue, exchage, routingKey);
     console.log("Successfully connected to RabbitMQ");
   } catch (error) {
     console.error("Failed to connect to RabbitMQ:", error);
@@ -32,15 +25,14 @@ export const connectRabbitMQ = async () => {
   }
 };
 
-export const publishToQueue = async (data: any) => {
+export const publishToQueue = async (pattern: string, data: any) => {
   try {
     if (!channel) {
       throw new Error("RabbitMQ channel is not initialized");
     }
-    console.log("data: ", data);
     const isSent = channel.publish(
-      exchage,
-      routingKey,
+      constantVariable.exchangeName,
+      pattern,
       Buffer.from(JSON.stringify(data))
     );
     return isSent;

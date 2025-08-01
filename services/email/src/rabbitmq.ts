@@ -17,8 +17,6 @@ export const connectRabbitMQ = async () => {
 
     connection = await amqp.connect(url);
     channel = await connection.createChannel();
-    await channel.assertQueue("WELCOME_MAIL_QUEUE");
-    await channel.assertQueue("RESET_PASSWORD_MAIL_QUEUE");
 
     connection.on("error", (err) => {
       console.error("RabbitMQ connection error: ", err);
