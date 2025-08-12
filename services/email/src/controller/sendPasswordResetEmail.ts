@@ -22,7 +22,7 @@ export const sendPasswordResetEmail = async ({
   );
   const source = fs.readFileSync(templatePath, "utf8");
 
-  const resetPasswordLink = ``;
+  const resetPasswordLink = `http://localhost:3001/forgot-password?auth=${token}`;
   const comipled = ejs.compile(source);
   const html = comipled({ name, resetPasswordLink });
 

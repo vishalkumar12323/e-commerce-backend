@@ -58,8 +58,7 @@ services:
       - /app/node_modules
     command: yarn dev:watch
     depends_on:
-      rabbitmq:
-        condition: service_healthy
+     - rabbitmq
 
         
   auth-service:
